@@ -4,13 +4,13 @@
 
 // Search the bookmarks when entering the search keyword.
 $(function() {
-  $('#search').change(function() {
-     $('#bookmarks').empty();
-     dumpBookmarks($('#search').val());
+  $('#eventid').change(function() {
+     $('#eventid').empty();
+     dumpeid($('#eventid').val());
   });
 });
 // Traverse the bookmark tree, and print the folder and nodes.
-function dumpBookmarks(query) {
+function dumpeid(query) {
   var bookmarkTreeNodes = chrome.bookmarks.getTree(
     function(bookmarkTreeNodes) {
       $('#bookmarks').append(dumpTreeNodes(bookmarkTreeNodes, query));

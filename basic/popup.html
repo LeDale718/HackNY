@@ -1,15 +1,6 @@
-<html>
-<head>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-  <script src="popup.js"></script>
-</head>
-<body style="width: 400px">
-  <div>Activity Name: <input id="search"></div>
-  <div>Urgency:
-    <select name="cars">
-      <option value="low">Low</option>
-      <option value="med">Med</option>
-  </select>
-</div>
-</body>
-</html>
+<select onchange="location = this.options[this.selectedIndex].value;">
+    <option>Please select</option>
+    <option value="texam.html">Exam</option>
+    <option value="tproject.html">Project</option>
+    <option value="thomework.html">Homework</option>
+</select>​
