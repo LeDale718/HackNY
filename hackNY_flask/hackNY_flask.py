@@ -1,5 +1,5 @@
 from flask import Flask, request
-from flask_cors import CORS
+# from flask_cors import CORS
 
 import httplib2
 import os
@@ -12,8 +12,11 @@ from oauth2client.file import Storage
 import datetime
 import dateutil.parser
 
+from sklearn import svm
+import numpy as np
+
+
 app = Flask(__name__)
-CORS(app)
 
 try:
     import argparse
@@ -22,7 +25,7 @@ except ImportError:
     flags = None
 
 SCOPES = 'https://www.googleapis.com/auth/calendar'
-CLIENT_SECRET_FILE = 'client_secret_new.json'
+CLIENT_SECRET_FILE = '/Users/amylam/Documents/GitHub/HackNY/hackNY_flask/myclient_secret.json'
 APPLICATION_NAME = 'Google Calendar API Python Quickstart'
 
 
@@ -55,6 +58,18 @@ def get_credentials():
     return credentials
 
 
+def predict_hours(assignment_type, urgency, days_left):
+    clf = svm.SVC(gamma=0.001, C=100.)
+
+    X = [[0, 1, 7], [1, 0, 7], [2, 2, 31], [0, 1, 8], [0, 1, 11], [0, 1, 10]]
+    y = [8, 10, 20, 8, 10, 20]
+
+    clf.fit(X, y)
+    test = np.array([assignment_type, urgency, days_left]).reshape(1, -1)
+    predicted_hours = clf.predict(test)
+    return int(predicted_hours)
+
+
 def add_work_study_time(event_name, event_hours, event_list, my_service):
     hours = event_hours
     for event in event_list:
@@ -65,48 +80,53 @@ def add_work_study_time(event_name, event_hours, event_list, my_service):
             if hours > 0:
                     my_event = {
                         'summary': 'Study for ' + event_name,
+                        'colorId': '5',
                         'start': {
                             'dateTime': end_time.isoformat(),
-                            'timeZone': event['start']['timeZone'],
+                            'timeZone': 'America/New_York',
                         },
                         'end':{
                             'dateTime': (end_time + datetime.timedelta(minutes=60)).isoformat(),
-                            'timeZone': event['end']['timeZone'],
+                            'timeZone': 'America/New_York',
                         },
                     }
-                    # new_event = my_service.events().insert(calendarId='primary', body=my_event).execute()
-                    print(event['summary'])
-                    print(my_event)
+                    new_event = my_service.events().insert(calendarId='primary', body=my_event).execute()
+                    # print(event['summary'])
+                    # print(my_event)
                     hours = hours - 1
-                    print("Hours : " + str(hours))
+                    # print("Hours : " + str(hours))
 
     return
 
 
 @app.route('/add_event/', methods=['GET', 'POST'])
 def add_event():
-    print("Hello")
     event_title = request.form['event_title']
-    print(event_title)
+    # print(event_title)
     location = request.form['event_location']
-    # event_start = request.form['event_start']
-    event_start = '2018-04-11T011:34'
-    event_end = '2018-04-11T12:34'
+    event_start = request.form['event_start']
+    event_end = request.form['event_end']
+    # event_start = '2018-04-11T011:34'
+    # event_end = '2018-04-11T12:34'
+
+    test_type = request.form['event_type']
+    # print(test_type)
+    urgency = request.form['urgency']
 
     until_time = dateutil.parser.parse(event_start).isoformat() + 'Z'
-    print(until_time)
+    # print(until_time)
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('calendar', 'v3', http=http)
 
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    print(now)
+    # print(now)
     print('Getting the upcoming events until event')
     eventsResult = service.events().list(
-        calendarId='primary', timeMin=now, timeMax=until_time, singleEvents=True,
-        orderBy='startTime').execute()
+        calendarId='primary', timeMin=now, timeMax=until_time).execute()
     events = eventsResult.get('items', [])
     # print(len(events))
+    # print(events)
     #
     # free_request = {
     #     "timeMax": "2018-04-11T11:34:00Z",
@@ -123,6 +143,7 @@ def add_event():
     real_event = {
         'summary': event_title,
         'location': location,
+        'colorId': '5',
         'start': {
             'dateTime': dateutil.parser.parse(event_start).isoformat(),
             'timeZone': 'America/New_York',
@@ -133,12 +154,17 @@ def add_event():
         },
     }
 
+    days_left = (dateutil.parser.parse(until_time) - dateutil.parser.parse(now)).days
+    # print("Days:" + str(days_left))
+
+    study_hours = predict_hours(int(test_type), int(urgency), days_left)
+
     new_event = service.events().insert(calendarId='primary', body=real_event).execute()
-    add_work_study_time(event_title, 5, events, service)
+    # print("Study HOURS are" + str(study_hours))
+    add_work_study_time(event_title, study_hours, events, service)
 
     return
 
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
-
