@@ -3,17 +3,26 @@
   <script src=""></script>
   <script src="popup.js"></script>
 </head>
-
-<div>Please Select a Event Type:</div>
 <body style="width: 300px; Line-Height:22px; background-color: #e8def4">
-  <select onchange="location = this.options[this.selectedIndex].value;">
-    <option>Please select</option>
-    <option value="texam.html">Exam</option>
-    <option value="tproject.html">Project</option>
-    <option value="thomework.html">Homework</option>
-  </select>
+  <div>Event Name: <input id="eventid">
+  </div>
+  <div>Event Type:
+    <select Eventtype: "Type">
+      <option value="Exam">Exam</option>
+      <option value="Project">Project</option>
+      <option value="Assignment">Assignment</option>
+    </select>
+    </div>
+    <div>Urgency:
+      <select name="urgency">
+        <option value="low">Low</option>
+        <option value="med">Med</option>
+        <option value="high">High</option>
 
-
-
-
+    </select>
+  </div>
+  <div>Location: <input id= "elocation" ></div>
+  <div>Event Start Time:<input id= "estime" ></div>
+  <div>Event End Time: <input id= "eetime" ></div>
 </body>
+</html>
